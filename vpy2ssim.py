@@ -12,8 +12,11 @@ for i in vpys:
     _i=str(i)
     i_=_i.replace('.vpy','_fin.hevc')
     i__=f'{i.stem}-ssim.txt'
-    script=SourceFileLoader('script',_i).load_module()
+    script=SourceFileLoader('vsscript',_i).load_module()
+    _o=script.src
+    del script
+    del sys.modules['vsscript']
     run=subprocess.Popen(f'ffmpeg -r 24 -i - -r 24 -i "{i_}" -lavfi ssim="{i__}" -f null -',stdin=subprocess.PIPE,cwd=wd)
-    script.src.output(run.stdin,y4m=True)
+    _o.output(run.stdin,y4m=True)
     run.communicate()
 input('done.')
