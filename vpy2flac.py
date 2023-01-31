@@ -2,12 +2,16 @@ import os,sys
 import pathlib
 import subprocess
 import re
-if len(sys.argv)<2:
-    _b=input('bps? ')
-else:
-    _b=sys.argv[1]
+_fil=pathlib.Path(__file__)
+try:
+    _b={'16':16,'24':24,'32':32}[str(_fil.stem)[-2:]]
+except:
+    if len(sys.argv)>=2:
+        _b=sys.argv[1]
+    else:
+        _b=input('bps? ')
 rex=re.compile(r'Source\((?:source=|)[r]*[\'"](.+?(?:m2ts|mkv|mp4))[\'"]',re.M)
-wd=pathlib.Path(__file__).parent.absolute()
+wd=_fil.parent.absolute()
 os.chdir(wd)
 vpys=wd.glob('*.vpy')
 for i in vpys:
