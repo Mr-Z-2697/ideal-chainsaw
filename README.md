@@ -8,4 +8,4 @@ calculates ssim with ffmpeg. assuming you have one output file per vapoursynth s
 ## find_smallest_ssim.py
 drag n drop ffmpeg generated ssim log. uses and displays **dB** form of ssim because it's easier to compare for human eyes ;p
 ## vpy2flac.py
-encodes audio from source file strings find in vpy, with concat support. and you need to manually edit this script to choose bitdepth.
+encodes audio from source file strings find in vpy, with concat support. and you need to manually edit this script to choose stream index.
