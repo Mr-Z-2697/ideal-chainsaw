@@ -23,8 +23,9 @@ for i in vpys:
         print('no valid file name found, skip')
         continue
     _n=len(m)
-    _f=f'-filter_complex concat=v=0:a=1:n={_n}[a]' if _n>1 else ''
+    _label=''.join([f'[{i}:a:0]' for i in range(_n)])
+    _f=f'-filter_complex {_label}concat=v=0:a=1:n={_n}[a]' if _n>1 else ''
     _s='0:a:0' if _n==1 else '[a]'
-    cmd=f'ffmpeg -hide_banner {_i} {_f} -map {_s} -vn -f wav -c pcm_s24le - | flac -8 -V --ignore-chunk-sizes -o "{_o}" -'
+    cmd=f'ffmpeg -hide_banner {_i} {_f} -map {_s} -vn -f wav -c pcm_s16le - | flac -8 -V --ignore-chunk-sizes -o "{_o}" -'
     subprocess.run(cmd,shell=True)
 input('over.')
