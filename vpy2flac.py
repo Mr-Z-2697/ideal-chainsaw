@@ -2,7 +2,7 @@ import os,sys
 import pathlib
 import subprocess
 import re
-if len(sys.argv<2):
+if len(sys.argv)<2:
     _b=input('bps? ')
 else:
     _b=sys.argv[1]
