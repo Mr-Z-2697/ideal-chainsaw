@@ -1,7 +1,11 @@
-import os
+import os,sys
 import pathlib
 import subprocess
 import re
+if len(sys.argv<2):
+    _b=input('bps? ')
+else:
+    _b=sys.argv[1]
 rex=re.compile(r'Source\((?:source=|)[r]*[\'"](.+?(?:m2ts|mkv|mp4))[\'"]',re.M)
 wd=pathlib.Path(__file__).parent.absolute()
 os.chdir(wd)
@@ -26,6 +30,6 @@ for i in vpys:
     _label=''.join([f'[{i}:a:0]' for i in range(_n)])
     _f=f'-filter_complex {_label}concat=v=0:a=1:n={_n}[a]' if _n>1 else ''
     _s='0:a:0' if _n==1 else '[a]'
-    cmd=f'ffmpeg -hide_banner {_i} {_f} -map {_s} -vn -f wav -c pcm_s24le - | flac -8 -V --ignore-chunk-sizes -o "{_o}" -'
+    cmd=f'ffmpeg -hide_banner {_i} {_f} -map {_s} -vn -f wav -c pcm_s{_b}le - | flac -8 -V --ignore-chunk-sizes -o "{_o}" -'
     subprocess.run(cmd,shell=True)
 input('over.')
