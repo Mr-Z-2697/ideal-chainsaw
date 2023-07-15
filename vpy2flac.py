@@ -34,6 +34,6 @@ for i in vpys:
     _label=''.join([f'[{i}:a:0]' for i in range(_n)])
     _f=f'-filter_complex {_label}concat=v=0:a=1:n={_n}[a]' if _n>1 else ''
     _s='0:a:0' if _n==1 else '[a]'
-    cmd=f'ffmpeg -hide_banner {_i} {_f} -map {_s} -vn -f wav -c pcm_s{_b}le - | flac -8 -V --ignore-chunk-sizes -o "{_o}" -'
+    cmd=f'ffmpeg -hide_banner {_i} {_f} -map {_s} -vn -f wav -c pcm_s{_b}le - | flac -8 -V -P0 --ignore-chunk-sizes -o "{_o}" -'
     subprocess.run(cmd,shell=True)
 input('over.')
