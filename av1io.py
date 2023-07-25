@@ -1,8 +1,17 @@
 #av1 (all) in one
 import subprocess
 import time
+import pathlib
 import vapoursynth as vs
-from vapoursynth import core
+core=vs.core
+
+cwd=pathlib.Path.cwd()
+
+lock=cwd/'.lock'
+if lock.exists():
+    raise FileExistsError("lock file exists")
+else:
+    lock.touch()
 
 source=r'test.mp4'
 cachefile=r'ffindex'
@@ -22,7 +31,24 @@ sup=core.mv.Super(clip,pel=1)
 vec=core.mv.Analyse(sup,blksize=32,truemotion=False)
 clip=core.mv.SCDetection(clip,vec)
 
-lastkf=0
+products=cwd.glob('*.ivf')
+products=[i for i in products]
+products.sort(key=lambda i:int(i.name.split('.')[0]))
+prodfins=[i for i in products if not str(i).endswith('.tmp.ivf')]
+prodvalid=[]
+for product in products:
+    if str(product).endswith('.tmp.ivf'):
+        break
+    else:
+        prodvalid.append(int(product.name.split('.')[0]))
+if prodvalid==[]:
+    lastkf=0
+else:
+    prodvalid.sort()
+    lastkf=prodvalid[-1]
+    concatrecreat='\n'.join([f"file '{i}.ivf'" for i in prodvalid[:-1]])
+    with open("_concat.txt","w",encoding='utf-8') as concat:
+        print(concatrecreat,file=concat)
 frames=clip.num_frames
 class a:
     def poll():
@@ -31,7 +57,7 @@ class a:
         return 0
 b=c=d=e=f=g=h=i=j=k=l=m=n=o=p=q=r=s=t=u=v=w=x=y=z=a
 penabled=[a,b,c,d]
-_g=1
+_g=len(prodvalid)+1
 for _n in range(lastkf,frames):
     _f=clip.get_frame(_n)
     end=_n==frames-1
@@ -40,11 +66,10 @@ for _n in range(lastkf,frames):
     elif _n-lastkf >= keyint or _f.props._SceneChangePrev or end:
         job=True
         _v=open(f"{lastkf}.vpy","w",encoding='utf-8')
-        concat=open("_concat.txt","a",encoding='utf-8')
-        print(f"file '{lastkf}.ivf'",file=concat)
-        concat.close()
+        with open("_concat.txt","a",encoding='utf-8') as concat:
+            print(f"file '{lastkf}.ivf'",file=concat)
         print(r'''import vapoursynth as vs
-from vapoursynth import core
+core=vs.core
 clip=core.ffms2.Source(r'{s}',cachefile=r'{c}')
 #clip=core.lsmas.LibavSMASHSource(r'{s}')
 clip[{i}:{j}].set_output()'''.format(i=lastkf,j=_n+end,s=source,c=cachefile),file=_v)
@@ -55,8 +80,8 @@ clip[{i}:{j}].set_output()'''.format(i=lastkf,j=_n+end,s=source,c=cachefile),fil
                     time.sleep(0.5)
                     continue
                 else:
-                    # cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | ffmpeg -hide_banner -i - -c:v libaom-av1 -cpu-used 6 -crf 36 "{lastkf}.ivf" && del "{lastkf}.vpy"'
-                    cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | sav1 -i - --preset 6 --crf 38 --tune 0 --keyint -1 -b "{lastkf}.ivf" && del "{lastkf}.vpy"'
+                    # cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | ffmpeg -hide_banner -i - -c:v libaom-av1 -cpu-used 6 -crf 36 "{lastkf}.tmp.ivf" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.ivf" "{lastkf}.ivf"'
+                    cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | sav1 -i - --preset 6 --crf 36 --tune 0 --keyint -1 -b "{lastkf}.tmp.ivf" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.ivf" "{lastkf}.ivf"'
                     penabled[_i]=subprocess.Popen(cmd,shell=True)
                     lastkf=_n
                     _g+=1
