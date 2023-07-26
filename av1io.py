@@ -5,18 +5,28 @@ import pathlib
 import vapoursynth as vs
 core=vs.core
 
-cwd=pathlib.Path.cwd()
+keyint=300
+min_keyint=15
 
+cwd=pathlib.Path.cwd()
 lock=cwd/'.lock'
 if lock.exists():
-    raise FileExistsError("lock file exists")
+    input('lock file exists, this script will exit.\nhit enter to continue...')
+    raise FileExistsError
 else:
     lock.touch()
 
-source=r'test.mp4'
+source=[i for i in cwd.glob('*.mkv')]
+source+=[i for i in cwd.glob('*.mp4')]
+source+=[i for i in cwd.glob('*.m2ts')]
+source+=[i for i in cwd.glob('*.webm')]
+source+=[i for i in cwd.glob('*.mov')]
+source+=[i for i in cwd.glob('*.wmv')]
+source+=[i for i in cwd.glob('*.avi')]
+if len(source)>0:
+    input('unfortunately, this thing does not support multiple sources. only first one will be encoded.\nhit enter to contunue...')
+source=sorted(source)[0]
 cachefile=r'ffindex'
-keyint=300
-min_keyint=15
 
 clip=core.ffms2.Source(source,cachefile=cachefile)
 #clip=core.lsmas.LibavSMASHSource(source)
@@ -56,7 +66,7 @@ class a:
     def wait():
         return 0
 b=c=d=e=f=g=h=i=j=k=l=m=n=o=p=q=r=s=t=u=v=w=x=y=z=a
-penabled=[a,b,c,d]
+penabled=[a]
 _g=len(prodvalid)+1
 for _n in range(lastkf,frames):
     _f=clip.get_frame(_n)
@@ -81,7 +91,7 @@ clip[{i}:{j}].set_output()'''.format(i=lastkf,j=_n+end,s=source,c=cachefile),fil
                     continue
                 else:
                     # cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | ffmpeg -hide_banner -i - -c:v libaom-av1 -cpu-used 6 -crf 36 "{lastkf}.tmp.ivf" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.ivf" "{lastkf}.ivf"'
-                    cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | sav1 -i - --preset 6 --crf 36 --tune 0 --keyint -1 -b "{lastkf}.tmp.ivf" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.ivf" "{lastkf}.ivf"'
+                    cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | sav1 -i - --preset 8 --crf 40 --tune 0 --keyint -1 -b "{lastkf}.tmp.ivf" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.ivf" "{lastkf}.ivf"'
                     penabled[_i]=subprocess.Popen(cmd,shell=True)
                     lastkf=_n
                     _g+=1
