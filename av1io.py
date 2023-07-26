@@ -23,7 +23,7 @@ source+=[i for i in cwd.glob('*.webm')]
 source+=[i for i in cwd.glob('*.mov')]
 source+=[i for i in cwd.glob('*.wmv')]
 source+=[i for i in cwd.glob('*.avi')]
-if len(source)>0:
+if len(source)>1:
     input('unfortunately, this thing does not support multiple sources. only first one will be encoded.\nhit enter to contunue...')
 source=sorted(source)[0]
 cachefile=r'ffindex'
