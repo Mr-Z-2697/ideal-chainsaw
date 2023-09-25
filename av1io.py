@@ -90,8 +90,8 @@ clip[{i}:{j}].set_output()'''.format(i=lastkf,j=_n+end,s=source,c=cachefile),fil
                     time.sleep(0.5)
                     continue
                 else:
-                    # cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | ffmpeg -hide_banner -i - -c:v libaom-av1 -cpu-used 6 -crf 36 "{lastkf}.tmp.ivf" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.ivf" "{lastkf}.ivf"'
-                    cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | sav1 -i - --preset 8 --crf 40 --tune 0 --keyint -1 -b "{lastkf}.tmp.ivf" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.ivf" "{lastkf}.ivf"'
+                    # cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | ffmpeg -hide_banner -i - -c:v libaom-av1 -cpu-used 6 -crf 36 -y "{lastkf}.tmp.ivf" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.ivf" "{lastkf}.ivf"'
+                    cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | sav1 -i - --preset 6 --crf 38 --tune 0 --keyint -1 -b "{lastkf}.tmp.ivf" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.ivf" "{lastkf}.ivf"'
                     penabled[_i]=subprocess.Popen(cmd,shell=True)
                     lastkf=_n
                     _g+=1
@@ -99,7 +99,7 @@ clip[{i}:{j}].set_output()'''.format(i=lastkf,j=_n+end,s=source,c=cachefile),fil
                     break
 
 # Such a low bitrate video don't really deserve a 96k opus.
-subprocess.run(r'title encoding audio... & ffmpeg -i "{s}" -c:a libopus -b:a 96k -mapping_family 1 -ac 2 -map_metadata -1 -map_chapters -1 _audio.opus'.format(s=source),shell=True)
+subprocess.run(r'title encoding audio... & ffmpeg -i "{s}" -c:a libopus -b:a 96k -mapping_family 0 -ac 2 -map_metadata -1 -map_chapters -1 _audio.opus'.format(s=source),shell=True)
 for _i in penabled:
     _i.wait()
 subprocess.run(r'ffmpeg -safe 0 -f concat -i _concat.txt -c copy _video.ivf & title all done.',shell=True)
