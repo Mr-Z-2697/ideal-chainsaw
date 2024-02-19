@@ -5,8 +5,8 @@ import pathlib
 import vapoursynth as vs
 core=vs.core
 
-keyint=300
-min_keyint=15
+keyint=161
+min_keyint=6
 
 cwd=pathlib.Path.cwd()
 lock=cwd/'.lock'
@@ -36,9 +36,10 @@ clip=core.ffms2.Source(source,cachefile=cachefile)
 # but you are the boss. And don't forget to edit the vapoursynth
 # template below.
 #################
+frames=clip.num_frames
 clip=clip.resize.Bicubic(1280,720,format=vs.YUV420P8)
 sup=core.mv.Super(clip,pel=1)
-vec=core.mv.Analyse(sup,blksize=32,truemotion=False)
+vec=core.mv.Analyse(sup,blksize=32,truemotion=False,isb=True)
 clip=core.mv.SCDetection(clip,vec)
 
 products=cwd.glob('*.ivf')
@@ -59,7 +60,6 @@ else:
     concatrecreat='\n'.join([f"file '{i}.ivf'" for i in prodvalid[:-1]])
     with open("_concat.txt","w",encoding='utf-8') as concat:
         print(concatrecreat,file=concat)
-frames=clip.num_frames
 class a:
     def poll():
         return 0
@@ -70,10 +70,13 @@ penabled=[a]
 _g=len(prodvalid)+1
 for _n in range(lastkf,frames):
     _f=clip.get_frame(_n)
+    kfd=_n-lastkf
     end=_n==frames-1
-    if _n-lastkf <= min_keyint:
+    scn=_f.props.get('_SceneChangeNext',0)
+    # scp=bool(_f.props.get('_SceneChangePrev',0) and 173)
+    if kfd <= min_keyint and not (kfd==min_keyint and scn):
         continue
-    elif _n-lastkf >= keyint or _f.props._SceneChangePrev or end:
+    elif kfd >= keyint or scn or end:
         job=True
         _v=open(f"{lastkf}.vpy","w",encoding='utf-8')
         with open("_concat.txt","a",encoding='utf-8') as concat:
@@ -82,7 +85,7 @@ for _n in range(lastkf,frames):
 core=vs.core
 clip=core.ffms2.Source(r'{s}',cachefile=r'{c}')
 #clip=core.lsmas.LibavSMASHSource(r'{s}')
-clip[{i}:{j}].set_output()'''.format(i=lastkf,j=_n+end,s=source,c=cachefile),file=_v)
+clip[{i}:{j}].set_output()'''.format(i=lastkf,j=_n+(scn or end),s=source,c=cachefile),file=_v)
         _v.close()
         while job:
             for _i,_x in enumerate(penabled):
@@ -93,7 +96,7 @@ clip[{i}:{j}].set_output()'''.format(i=lastkf,j=_n+end,s=source,c=cachefile),fil
                     # cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | ffmpeg -hide_banner -i - -c:v libaom-av1 -cpu-used 6 -crf 36 -y "{lastkf}.tmp.ivf" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.ivf" "{lastkf}.ivf"'
                     cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | sav1 -i - --preset 6 --crf 38 --tune 0 --keyint -1 -b "{lastkf}.tmp.ivf" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.ivf" "{lastkf}.ivf"'
                     penabled[_i]=subprocess.Popen(cmd,shell=True)
-                    lastkf=_n
+                    lastkf=_n+bool(scn)
                     _g+=1
                     job=False
                     break
