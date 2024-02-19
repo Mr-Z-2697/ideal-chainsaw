@@ -28,7 +28,7 @@ if len(source)>1:
 source=sorted(source)[0]
 cachefile=r'ffindex'
 
-clip=core.ffms2.Source(source,cachefile=cachefile)
+clip=core.lsmas.LWLibavSource(source,cachefile=cachefile)
 #clip=core.lsmas.LibavSMASHSource(source)
 #################
 # Although smashsource filter don't need an indexing process,
@@ -83,7 +83,7 @@ for _n in range(lastkf,frames):
             print(f"file '{lastkf}.ivf'",file=concat)
         print(r'''import vapoursynth as vs
 core=vs.core
-clip=core.ffms2.Source(r'{s}',cachefile=r'{c}')
+clip=core.lsmas.LWLibavSource(r'{s}',cachefile=r'{c}')
 #clip=core.lsmas.LibavSMASHSource(r'{s}')
 clip[{i}:{j}].set_output()'''.format(i=lastkf,j=_n+(scn or end),s=source,c=cachefile),file=_v)
         _v.close()
