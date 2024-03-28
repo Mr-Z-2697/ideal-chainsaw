@@ -26,7 +26,8 @@ source+=[i for i in cwd.glob('*.avi')]
 if len(source)>1:
     input('unfortunately, this thing does not support multiple sources. only first one will be encoded.\nhit enter to contunue...')
 source=sorted(source)[0]
-cachefile=r'ffindex'
+cachefile=r'index'
+extension='ivf'
 
 clip=core.lsmas.LWLibavSource(source,cachefile=cachefile)
 #clip=core.lsmas.LibavSMASHSource(source)
@@ -42,13 +43,13 @@ sup=core.mv.Super(clip,pel=1)
 vec=core.mv.Analyse(sup,blksize=32,truemotion=False,isb=True)
 clip=core.mv.SCDetection(clip,vec)
 
-products=cwd.glob('*.ivf')
+products=cwd.glob(f'*.{extension}')
 products=[i for i in products]
 products.sort(key=lambda i:int(i.name.split('.')[0]))
-prodfins=[i for i in products if not str(i).endswith('.tmp.ivf')]
+prodfins=[i for i in products if not str(i).endswith(f'.tmp.{extension}')]
 prodvalid=[]
 for product in products:
-    if str(product).endswith('.tmp.ivf'):
+    if str(product).endswith(f'.tmp.{extension}'):
         break
     else:
         prodvalid.append(int(product.name.split('.')[0]))
@@ -57,7 +58,7 @@ if prodvalid==[]:
 else:
     prodvalid.sort()
     lastkf=prodvalid[-1]
-    concatrecreat='\n'.join([f"file '{i}.ivf'" for i in prodvalid[:-1]])
+    concatrecreat='\n'.join([f"file '{i}.{extension}'" for i in prodvalid[:-1]])
     with open("_concat.txt","w",encoding='utf-8') as concat:
         print(concatrecreat,file=concat)
 class a:
@@ -80,7 +81,7 @@ for _n in range(lastkf,frames):
         job=True
         _v=open(f"{lastkf}.vpy","w",encoding='utf-8')
         with open("_concat.txt","a",encoding='utf-8') as concat:
-            print(f"file '{lastkf}.ivf'",file=concat)
+            print(f"file '{lastkf}.{extension}'",file=concat)
         print(r'''import vapoursynth as vs
 core=vs.core
 clip=core.lsmas.LWLibavSource(r'{s}',cachefile=r'{c}')
@@ -93,8 +94,9 @@ clip[{i}:{j}].set_output()'''.format(i=lastkf,j=_n+(scn or end),s=source,c=cache
                     time.sleep(0.5)
                     continue
                 else:
-                    # cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | ffmpeg -hide_banner -i - -c:v libaom-av1 -cpu-used 6 -crf 36 -y "{lastkf}.tmp.ivf" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.ivf" "{lastkf}.ivf"'
-                    cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | sav1 -i - --preset 6 --crf 38 --tune 0 --keyint -1 -b "{lastkf}.tmp.ivf" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.ivf" "{lastkf}.ivf"'
+                    # cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | uvg266-10 -i - --input-file-format y4m --input-bitdepth 10 --period 0 --preset fast --gop 8 --rd 3 --rdoq --mv-rdo --signhide --qp 28 -o "{lastkf}.tmp.{extension}" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.{extension}" "{lastkf}.{extension}"'
+                    # cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | ffmpeg -hide_banner -i - -c:v libaom-av1 -cpu-used 6 -crf 36 -y "{lastkf}.tmp.{extension}" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.{extension}" "{lastkf}.{extension}"'
+                    cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | sav1 -i - --preset 6 --crf 38 --tune 0 --keyint -1 -b "{lastkf}.tmp.{extension}" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.{extension}" "{lastkf}.{extension}"'
                     penabled[_i]=subprocess.Popen(cmd,shell=True)
                     lastkf=_n+bool(scn)
                     _g+=1
@@ -105,5 +107,5 @@ clip[{i}:{j}].set_output()'''.format(i=lastkf,j=_n+(scn or end),s=source,c=cache
 subprocess.run(r'title encoding audio... & ffmpeg -i "{s}" -c:a libopus -b:a 96k -mapping_family 0 -ac 2 -map_metadata -1 -map_chapters -1 _audio.opus'.format(s=source),shell=True)
 for _i in penabled:
     _i.wait()
-subprocess.run(r'ffmpeg -safe 0 -f concat -i _concat.txt -c copy _video.ivf & title all done.',shell=True)
+subprocess.run(rf'ffmpeg -safe 0 -f concat -i _concat.txt -strict -2 -c copy _video.{extension} & title all done.',shell=True)
 input('enter to exit.')
