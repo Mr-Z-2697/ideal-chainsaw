@@ -16,13 +16,21 @@ if lock.exists():
 else:
     lock.touch()
 
-source=[i for i in cwd.glob('*.mkv')]
-source+=[i for i in cwd.glob('*.mp4')]
-source+=[i for i in cwd.glob('*.m2ts')]
-source+=[i for i in cwd.glob('*.webm')]
-source+=[i for i in cwd.glob('*.mov')]
-source+=[i for i in cwd.glob('*.wmv')]
-source+=[i for i in cwd.glob('*.avi')]
+keyframefile=cwd/'.keyframes'
+keyframefileexists=keyframefile.exists()
+if keyframefileexists:
+    with open(keyframefile,'r') as f:
+        keyframelist=f.read()
+        keyframelist=keyframelist.split('\n')
+        keyframelist=[int(i) if i else i for i in keyframelist]
+
+source=list(cwd.glob('*.mkv'))
+source+=list(cwd.glob('*.mp4'))
+source+=list(cwd.glob('*.m2ts'))
+source+=list(cwd.glob('*.webm'))
+source+=list(cwd.glob('*.mov'))
+source+=list(cwd.glob('*.wmv'))
+source+=list(cwd.glob('*.avi'))
 if len(source)>1:
     input('unfortunately, this thing does not support multiple sources. only first one will be encoded.\nhit enter to contunue...')
 source=sorted(source)[0]
@@ -38,10 +46,11 @@ clip=core.lsmas.LWLibavSource(source,cachefile=cachefile)
 # template below.
 #################
 frames=clip.num_frames
-clip=clip.resize.Bicubic(1280,720,format=vs.YUV420P8)
-sup=core.mv.Super(clip,pel=1)
-vec=core.mv.Analyse(sup,blksize=32,truemotion=False,isb=True)
-clip=core.mv.SCDetection(clip,vec)
+if not keyframefileexists:
+    clip=clip.resize.Bicubic(1280,720,format=vs.YUV420P8)
+    sup=core.mv.Super(clip,pel=1)
+    vec=core.mv.Analyse(sup,blksize=32,truemotion=False,isb=True)
+    clip=core.mv.SCDetection(clip,vec)
 
 products=cwd.glob(f'*.{extension}')
 products=[i for i in products]
@@ -70,11 +79,14 @@ b=c=d=e=f=g=h=i=j=k=l=m=n=o=p=q=r=s=t=u=v=w=x=y=z=a
 penabled=[a]
 _g=len(prodvalid)+1
 for _n in range(lastkf,frames):
-    _f=clip.get_frame(_n)
+    if keyframefileexists:
+        scn=_n+1 in keyframelist
+    else:
+        _f=clip.get_frame(_n)
+        scn=_f.props.get('_SceneChangeNext',0)
+        # scp=bool(_f.props.get('_SceneChangePrev',0) and 173)
     kfd=_n-lastkf
     end=_n==frames-1
-    scn=_f.props.get('_SceneChangeNext',0)
-    # scp=bool(_f.props.get('_SceneChangePrev',0) and 173)
     if kfd <= min_keyint and not (kfd==min_keyint and scn):
         continue
     elif kfd >= keyint or scn or end:
@@ -94,6 +106,7 @@ clip[{i}:{j}].set_output()'''.format(i=lastkf,j=_n+(scn or end),s=source,c=cache
                     time.sleep(0.5)
                     continue
                 else:
+                    # cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | vvencffapp -i - --y4m -ip 0 -rs 10 -dr idr --preset medium -t 16 --WaveFrontSynchro 1 --CTUSize 64 --BDPCM 0 --IBC 0 --TransformSkip 0 --ForceSCC 1 -q 24 -b "{lastkf}.tmp.{extension}" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.{extension}" "{lastkf}.{extension}"'
                     # cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | uvg266-10 -i - --input-file-format y4m --input-bitdepth 10 --period 0 --preset fast --gop 8 --rd 3 --rdoq --mv-rdo --signhide --qp 28 -o "{lastkf}.tmp.{extension}" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.{extension}" "{lastkf}.{extension}"'
                     # cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | ffmpeg -hide_banner -i - -c:v libaom-av1 -cpu-used 6 -crf 36 -y "{lastkf}.tmp.{extension}" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.{extension}" "{lastkf}.{extension}"'
                     cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | sav1 -i - --preset 6 --crf 38 --tune 0 --keyint -1 -b "{lastkf}.tmp.{extension}" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.{extension}" "{lastkf}.{extension}"'
