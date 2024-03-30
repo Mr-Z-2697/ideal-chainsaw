@@ -1,5 +1,6 @@
 #av1 (all) in one
 import subprocess
+import os
 import time
 import pathlib
 import vapoursynth as vs
@@ -36,6 +37,7 @@ if len(source)>1:
 source=sorted(source)[0]
 cachefile=r'index'
 extension='ivf'
+byte_concat=extension=='266' # huh.
 
 clip=core.lsmas.LWLibavSource(source,cachefile=cachefile)
 #clip=core.lsmas.LibavSMASHSource(source)
@@ -67,7 +69,10 @@ if prodvalid==[]:
 else:
     prodvalid.sort()
     lastkf=prodvalid[-1]
-    concatrecreat='\n'.join([f"file '{i}.{extension}'" for i in prodvalid[:-1]])
+    if byte_concat:
+        concatrecreat='\n'.join([f"{i}.{extension}" for i in prodvalid[:-1]])
+    else:
+        concatrecreat='\n'.join([f"file '{i}.{extension}'" for i in prodvalid[:-1]])
     with open("_concat.txt","w",encoding='utf-8') as concat:
         print(concatrecreat,file=concat)
 class a:
@@ -93,7 +98,10 @@ for _n in range(lastkf,frames):
         job=True
         _v=open(f"{lastkf}.vpy","w",encoding='utf-8')
         with open("_concat.txt","a",encoding='utf-8') as concat:
-            print(f"file '{lastkf}.{extension}'",file=concat)
+            if byte_concat:
+                print(f"{lastkf}.{extension}",file=concat)
+            else:
+                print(f"file '{lastkf}.{extension}'",file=concat)
         print(r'''import vapoursynth as vs
 core=vs.core
 clip=core.lsmas.LWLibavSource(r'{s}',cachefile=r'{c}')
@@ -120,5 +128,17 @@ clip[{i}:{j}].set_output()'''.format(i=lastkf,j=_n+(scn or end),s=source,c=cache
 subprocess.run(r'title encoding audio... & ffmpeg -i "{s}" -c:a libopus -b:a 96k -mapping_family 0 -ac 2 -map_metadata -1 -map_chapters -1 _audio.opus -n'.format(s=source),shell=True)
 for _i in penabled:
     _i.wait()
-subprocess.run(rf'ffmpeg -strict -2 -safe 0 -f concat -i _concat.txt -strict -2 -c copy _video.{extension} & title all done.',shell=True)
+if byte_concat:
+    os.system('title byte concat')
+    with open('_concat.txt','r',encoding='utf-8') as _c:
+        concatlist=_c.read().split('\n')
+        concatlist=[i for i in concatlist if i]
+    with open('_video.266','wb') as _vid:
+        for _i in concatlist:
+            with open(_i,'rb') as _seg:
+                for _block in iter(lambda: _seg.read(266<<20),b''):
+                    _vid.write(_block)
+    os.system('title all done.')
+else:
+    subprocess.run(rf'ffmpeg -safe 0 -f concat -i _concat.txt -c copy _video.{extension} & title all done.',shell=True)
 input('enter to exit.')
