@@ -137,7 +137,7 @@ if byte_concat:
     with open('_video.266','wb') as _vid:
         for _i in concatlist:
             with open(_i,'rb') as _seg:
-                for _block in iter(lambda: _seg.read(266<<20),b''):
+                while _block:=_seg.read(266<<10):
                     _vid.write(_block)
     os.system('title all done.')
 else:
