@@ -106,7 +106,7 @@ clip[{i}:{j}].set_output()'''.format(i=lastkf,j=_n+(scn or end),s=source,c=cache
                     time.sleep(0.5)
                     continue
                 else:
-                    # cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | vvencffapp -i - --y4m -ip 0 -rs 10 -dr idr --preset medium -t 16 --WaveFrontSynchro 1 --CTUSize 64 --BDPCM 0 --IBC 0 --TransformSkip 0 --ForceSCC 1 -q 24 -b "{lastkf}.tmp.{extension}" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.{extension}" "{lastkf}.{extension}"'
+                    # cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | vvencffapp -i - --y4m -ip 0 -rs 1024 -dr idr --preset medium -t 16 --WaveFrontSynchro 1 --CTUSize 64 --IFP 1 --CIIP 3 --POC0IDR 1 -q 24 -b "{lastkf}.tmp.{extension}" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.{extension}" "{lastkf}.{extension}"'
                     # cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | uvg266-10 -i - --input-file-format y4m --input-bitdepth 10 --period 0 --preset fast --gop 8 --rd 3 --rdoq --mv-rdo --signhide --qp 28 -o "{lastkf}.tmp.{extension}" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.{extension}" "{lastkf}.{extension}"'
                     # cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | ffmpeg -hide_banner -i - -c:v libaom-av1 -cpu-used 6 -crf 36 -y "{lastkf}.tmp.{extension}" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.{extension}" "{lastkf}.{extension}"'
                     cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {lastkf/frames*100}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | sav1 -i - --preset 6 --crf 38 --tune 0 --keyint -1 -b "{lastkf}.tmp.{extension}" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.{extension}" "{lastkf}.{extension}"'
@@ -117,8 +117,8 @@ clip[{i}:{j}].set_output()'''.format(i=lastkf,j=_n+(scn or end),s=source,c=cache
                     break
 
 # Such a low bitrate video don't really deserve a 96k opus.
-subprocess.run(r'title encoding audio... & ffmpeg -i "{s}" -c:a libopus -b:a 96k -mapping_family 0 -ac 2 -map_metadata -1 -map_chapters -1 _audio.opus'.format(s=source),shell=True)
+subprocess.run(r'title encoding audio... & ffmpeg -i "{s}" -c:a libopus -b:a 96k -mapping_family 0 -ac 2 -map_metadata -1 -map_chapters -1 _audio.opus -n'.format(s=source),shell=True)
 for _i in penabled:
     _i.wait()
-subprocess.run(rf'ffmpeg -safe 0 -f concat -i _concat.txt -strict -2 -c copy _video.{extension} & title all done.',shell=True)
+subprocess.run(rf'ffmpeg -strict -2 -safe 0 -f concat -i _concat.txt -strict -2 -c copy _video.{extension} & title all done.',shell=True)
 input('enter to exit.')
