@@ -8,6 +8,9 @@ core=vs.core
 
 keyint=161
 min_keyint=6
+extension='ivf'
+byte_concat=extension=='266' # huh.
+parallel_processes=1 # limited to 26 due to some stupid code I wrote and was freakin super proud of (not really).
 
 cwd=pathlib.Path.cwd()
 lock=cwd/'.lock'
@@ -36,8 +39,6 @@ if len(source)>1:
     input('unfortunately, this thing does not support multiple sources. only first one will be encoded.\nhit enter to contunue...')
 source=sorted(source)[0]
 cachefile=r'index'
-extension='ivf'
-byte_concat=extension=='266' # huh.
 
 clip=core.lsmas.LWLibavSource(source,cachefile=cachefile)
 #clip=core.lsmas.LibavSMASHSource(source)
@@ -81,7 +82,7 @@ class a:
     def wait():
         return 0
 b=c=d=e=f=g=h=i=j=k=l=m=n=o=p=q=r=s=t=u=v=w=x=y=z=a
-penabled=[a]
+penabled=[a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z][:parallel_processes]
 _g=len(prodvalid)+1
 for _n in range(lastkf,frames):
     if keyframefileexists:
