@@ -1,4 +1,4 @@
-#av1 (all) in one
+# (video) segments/segmented (encoding) all in one
 import subprocess
 import os
 import time
