@@ -9,7 +9,7 @@ core=vs.core
 keyint=161
 min_keyint=6
 extension='ivf'
-byte_concat=extension=='266' # huh.
+byte_concat=extension in ('266','vvc','265','hevc','264','h264','avc') # huh. better don't use x264/5, not necessary for them, parallel and scenecut is good enough.
 parallel_processes=1 # limited to 26 due to some stupid code I wrote and was freakin super proud of (not really).
 
 cwd=pathlib.Path.cwd()
@@ -134,7 +134,7 @@ if byte_concat:
     with open('_concat.txt','r',encoding='utf-8') as _c:
         concatlist=_c.read().split('\n')
         concatlist=[i for i in concatlist if i]
-    with open('_video.266','wb') as _vid:
+    with open(f'_video.{extension}','wb') as _vid:
         for _i in concatlist:
             with open(_i,'rb') as _seg:
                 while _block:=_seg.read(266<<10):
