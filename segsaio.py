@@ -9,8 +9,12 @@ core=vs.core
 keyint=161
 min_keyint=6
 extension='ivf'
-byte_concat=extension in ('266','vvc','265','hevc','264','h264','avc') # huh. better don't use x264/5, not necessary for them, parallel and scenecut is good enough.
-parallel_processes=1 # limited to 26 due to some stupid code I wrote and was freakin super proud of (not really).
+
+# huh. better don't use x264/5, not necessary for them, parallel and scenecut is good enough.
+byte_concat=extension in ('266','vvc','265','hevc','264','h264','avc')
+
+# limited to 26 due to some stupid code I wrote and was freakin super proud of (not really).
+parallel_processes=1
 
 cwd=pathlib.Path.cwd()
 lock=cwd/'.lock'
