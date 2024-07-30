@@ -16,5 +16,5 @@ and you need to manually edit this script to choose stream index.
 uses mvtools or \<insert your scd method here\> to detect scene change then encode in fragments with multi-process parallel work, _on the fly_. ([i know how to use pool](https://github.com/Mr-Z-2697/makeheic.py/blob/main/makeheic.py#L8), i use my stupid implementation just because i thought pool was too complicated)
 
 aomenc not doing good in mt, svtav1 refuses to use scenecut like a(n) ■■■■■, so either should benefit from this script.\
-[they said yes, we say no](https://slow.pics/c/oUocYhgo) (Railgun T NCOP SVT-AV1 8bit preset 6 tune 0/VQ crf 38)\
+react to svtav1's refusing to use scenecut: [they said yes, we say no](https://slow.pics/c/oUocYhgo) (Railgun T NCOP SVT-AV1 8bit preset 6 tune 0/VQ crf 38)\
 ![2024-02-19_184145](https://github.com/Mr-Z-2697/ideal-chainsaw/assets/74594146/52c7287b-0d80-4588-8173-166663e2f503)
