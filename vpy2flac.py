@@ -10,6 +10,10 @@ except:
         _b=sys.argv[1]
     else:
         _b=input('bps? ')
+if 'cut' in _fil.name:
+    mode='1'
+else:
+    mode=input('mode? (0:concat, 1:cut) ')
 rex=re.compile(r'Source\((?:source=|)[r]*[\'"](.+?(?:m2ts|mkv|mp4))[\'"]',re.M)
 wd=_fil.parent.absolute()
 os.chdir(wd)
@@ -22,15 +26,37 @@ for i in vpys:
         continue
     with open(i,'r',encoding='utf-8') as f:
         c=f.read()
-    m=rex.findall(c)
-    if m:
-        _i=''
-        for j in m:
-            _i+=f'-i "{j}" '
+    if mode=='1':
+        framedur=1001/24000
+        lines=c.split('\n')
+        for j in lines:
+            ml=rex.findall(j)
+            if ml:
+                _i=f'-i "{ml[0]}"'
+                slice=re.findall('\[([0-9]*:[0-9]*)\]',j)
+                startframe,endframe=slice[0].split(':')
+                startframe=int(startframe) if startframe else 0
+                endframe=int(endframe) if endframe else 0
+                if startframe:
+                    _i+=f' -ss {startframe*framedur}'
+                if endframe:
+                    _i+=f' -to {endframe*framedur}'
+                break
+        if ml:
+            _n=1
+        else:
+            print('no valid file name found, skip')
     else:
-        print('no valid file name found, skip')
-        continue
-    _n=len(m)
+        m=rex.findall(c)
+        if m:
+            _i=''
+            for j in m:
+                _i+=f'-i "{j}" '
+        else:
+            print('no valid file name found, skip')
+            continue
+        _n=len(m)
+
     _label=''.join([f'[{i}:a:0]' for i in range(_n)])
     _f=f'-filter_complex {_label}concat=v=0:a=1:n={_n}[a]' if _n>1 else ''
     _s='0:a:0' if _n==1 else '[a]'
