@@ -54,15 +54,13 @@ if not keyframefileexists:
     clip=core.mv.SCDetection(clip,vec)
 
 products=cwd.glob(f'*.{extension}')
-products=[i for i in products]
+products=[i for i in products if not i.name.startswith('_video')]
 products.sort(key=lambda i:int(i.name.split('.')[0]))
 prodfins=[i for i in products if not str(i).endswith(f'.tmp.{extension}')]
 prodvalid=[]
 for product in products:
     if str(product).endswith(f'.tmp.{extension}'):
         break
-    elif str(product).startswith('_video'):
-        continue
     else:
         prodvalid.append(int(product.name.split('.')[0]))
 if prodvalid==[]:
