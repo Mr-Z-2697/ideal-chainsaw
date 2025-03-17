@@ -45,13 +45,7 @@ source=sorted(source)[0]
 cachefile=r'index'
 
 clip=core.lsmas.LWLibavSource(source,cachefile=cachefile)
-#clip=core.lsmas.LibavSMASHSource(source)
-#################
-# Although smashsource filter don't need an indexing process,
-# it tends to get laggy after some time, so it's deprecated,
-# but you are the boss. And don't forget to edit the vapoursynth
-# template below.
-#################
+
 frames=clip.num_frames
 if not keyframefileexists:
     clip=clip.resize.Bicubic(1280,720,format=vs.YUV420P8)
@@ -110,7 +104,6 @@ for _n in range(lastkf,frames):
         print(r'''import vapoursynth as vs
 core=vs.core
 clip=core.lsmas.LWLibavSource(r'{s}',cachefile=r'{c}')
-#clip=core.lsmas.LibavSMASHSource(r'{s}')
 clip[{i}:{j}].set_output()'''.format(i=lastkf,j=_n+(scn or end),s=source,c=cachefile),file=_v)
         _v.close()
         while job:
@@ -120,10 +113,17 @@ clip[{i}:{j}].set_output()'''.format(i=lastkf,j=_n+(scn or end),s=source,c=cache
                     continue
                 else:
                     percentage=f'{lastkf/frames*100:.2f}'
-                    # cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {percentage}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | vvencffapp -i - --y4m -ip -1 -dr idr --POC0IDR 1 --preset medium -t 16 --WaveFrontSynchro 1 --IFP 0 --CIIP 3 --SAO 0 -qpa 0 -q 25 --intraqpoffset -7 -b "{lastkf}.tmp.{extension}" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.{extension}" "{lastkf}.{extension}"'
-                    # cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {percentage}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | uvg266-10 -i - --input-file-format y4m --input-bitdepth 10 --period 0 --preset veryslow --no-dep-quant --sao off --no-cclm --rd 3 --amvr --qp 25 -o "{lastkf}.tmp.{extension}" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.{extension}" "{lastkf}.{extension}"'
-                    # cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {percentage}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | ffmpeg -hide_banner -i - -c:v libaom-av1 -cpu-used 6 -crf 36 -y "{lastkf}.tmp.{extension}" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.{extension}" "{lastkf}.{extension}"'
-                    cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {percentage}%) gops: {_g} & vspipe -c y4m "{lastkf}.vpy" - | sav1 -i - --preset 5 --crf 38 --tune 0 --keyint -1 -b "{lastkf}.tmp.{extension}" && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.{extension}" "{lastkf}.{extension}"'
+
+                    cmd=f'title piece {lastkf} to {_n+end} of {frames} (roughly {percentage}%) gops: {_g} & '
+                    cmd+=f'vspipe -c y4m "{lastkf}.vpy" - | '
+
+                    # cmd+=f'vvencffapp -i - --y4m -ip -1 -dr idr --POC0IDR 1 --preset medium -t 16 --WaveFrontSynchro 1 --IFP 0 --CIIP 3 --SAO 0 -qpa 0 -q 25 --intraqpoffset -7 -b "{lastkf}.tmp.{extension}"'
+                    # cmd+=f'uvg266-10 -i - --input-file-format y4m --input-bitdepth 10 --period 0 --preset veryslow --no-dep-quant --sao off --no-cclm --rd 3 --amvr --qp 25 -o "{lastkf}.tmp.{extension}"'
+                    # cmd+=f'ffmpeg -hide_banner -i - -c:v libaom-av1 -cpu-used 6 -crf 36 -y "{lastkf}.tmp.{extension}"'
+                    cmd+=f'sav1 -i - --preset 5 --crf 38 --tune 0 --keyint -1 -b "{lastkf}.tmp.{extension}"'
+
+                    cmd+=f' && del "{lastkf}.vpy" && move/Y "{lastkf}.tmp.{extension}" "{lastkf}.{extension}"'
+
                     penabled[_i]=subprocess.Popen(cmd,shell=True)
                     lastkf=_n+bool(scn)
                     _g+=1
