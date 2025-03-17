@@ -61,6 +61,8 @@ prodvalid=[]
 for product in products:
     if str(product).endswith(f'.tmp.{extension}'):
         break
+    elif str(product).startswith('_video'):
+        continue
     else:
         prodvalid.append(int(product.name.split('.')[0]))
 if prodvalid==[]:
