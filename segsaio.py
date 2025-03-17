@@ -83,6 +83,8 @@ b=c=d=e=f=g=h=i=j=k=l=m=n=o=p=q=r=s=t=u=v=w=x=y=z=a
 penabled=[a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z][:parallel_processes]
 _g=len(prodvalid)+1
 for _n in range(lastkf,frames):
+    if (cwd/'.break').exists():
+        break
     if keyframefileexists:
         scn=_n+1 in keyframelist
     else:
@@ -109,7 +111,7 @@ clip[{i}:{j}].set_output()'''.format(i=lastkf,j=_n+(scn or end),s=source,c=cache
         while job:
             for _i,_x in enumerate(penabled):
                 if _x.poll()==None:
-                    time.sleep(0.5)
+                    time.sleep(0.1)
                     continue
                 else:
                     percentage=f'{lastkf/frames*100:.2f}'
@@ -131,7 +133,8 @@ clip[{i}:{j}].set_output()'''.format(i=lastkf,j=_n+(scn or end),s=source,c=cache
                     break
 
 # Such a low bitrate video don't really deserve a 96k opus.
-subprocess.run(r'title encoding audio... & ffmpeg -i "{s}" -c:a libopus -b:a 96k -mapping_family 0 -ac 2 -map_metadata -1 -map_chapters -1 _audio.opus -n'.format(s=source),shell=True)
+if not (cwd/'.break').exists():
+    subprocess.run(r'title encoding audio... & ffmpeg -i "{s}" -c:a libopus -b:a 96k -mapping_family 0 -ac 2 -map_metadata -1 -map_chapters -1 _audio.opus -n'.format(s=source),shell=True)
 for _i in penabled:
     _i.wait()
 if byte_concat:
